@@ -17,31 +17,28 @@ class KeypadSection extends StatelessWidget {
       children: [
         RawMaterialButton(
           onPressed: () {
-            print('get new quote');
             fetchNew;
           },
           elevation: 2.0,
           fillColor: Colors.white,
-          child: Icon(
+          padding: const EdgeInsets.all(15.0),
+          shape: const CircleBorder(),
+          child: const Icon(
             Icons.replay_outlined,
             size: 35.0,
           ),
-          padding: const EdgeInsets.all(15.0),
-          shape: const CircleBorder(),
         ),
         const SizedBox(height: 32),
         RawMaterialButton(
-          onPressed: () {
-            print('share quote');
-          },
+          onPressed: () {},
           elevation: 2.0,
           fillColor: Colors.white,
+          padding: const EdgeInsets.all(15.0),
+          shape: const CircleBorder(),
           child: const Icon(
             Icons.share,
             size: 35.0,
           ),
-          padding: const EdgeInsets.all(15.0),
-          shape: const CircleBorder(),
         )
       ],
     );
