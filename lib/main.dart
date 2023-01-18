@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:random_quotes_app/models/quote_model.dart';
 import 'package:random_quotes_app/widgets/quote_section.dart';
+import 'package:share_plus/share_plus.dart';
 
 void main() {
   runApp(const RandomQuotesApp());
@@ -80,8 +81,12 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 32),
                   RawMaterialButton(
-                    onPressed: () {
-                      print('share quote');
+                    onPressed: () async {
+                      // Send image with quote?
+                      await Share.share(
+                        snapshot.data!.body,
+                        subject: 'Look at this stoic quote!',
+                      );
                     },
                     elevation: 2.0,
                     fillColor: Colors.white,
@@ -116,5 +121,3 @@ Future<QuoteModel> fetchQuote() async {
     throw Exception('Failed to load quote');
   }
 }
-
-// Share the quote in Facebook, Twitter and WhatsApp.
