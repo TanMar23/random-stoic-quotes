@@ -18,15 +18,18 @@ class QuoteSection extends StatelessWidget {
         children: <Widget>[
           Text(
             quoteBody,
-            style: const TextStyle(fontSize: 20),
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'LibreBaskerville',
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 40),
           Text(
-            quoteAuthor.toUpperCase(),
+            '- ${quoteAuthor.toUpperCase()}',
             style: const TextStyle(
               fontSize: 12,
-              color: Colors.grey,
             ),
           ),
         ],

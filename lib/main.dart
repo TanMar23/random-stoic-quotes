@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:random_quotes_app/models/quote_model.dart';
@@ -56,48 +57,61 @@ class _HomePageState extends State<HomePage> {
               return const CircularProgressIndicator();
             }
             if (snapshot.hasData) {
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  QuoteSection(
-                    quoteAuthor: snapshot.data!.author,
-                    quoteBody: snapshot.data!.body,
-                  ),
-                  const SizedBox(height: 32),
-                  RawMaterialButton(
-                    onPressed: () {
-                      setState(() {
-                        quote = fetchQuote();
-                      });
-                    },
-                    elevation: 2.0,
-                    fillColor: Colors.white,
-                    padding: const EdgeInsets.all(15.0),
-                    shape: const CircleBorder(),
-                    child: const Icon(
-                      Icons.replay_outlined,
-                      size: 35.0,
+              return LayoutBuilder(
+                builder: (BuildContext context, BoxConstraints constraints) {
+                  return Container(
+                    height: constraints.maxHeight,
+                    width: constraints.maxWidth,
+                    color:
+                        Color((math.Random().nextDouble() * 0xFFFFFF).toInt())
+                            .withOpacity(0.10),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        QuoteSection(
+                          quoteAuthor: snapshot.data!.author,
+                          quoteBody: snapshot.data!.body,
+                        ),
+                        const SizedBox(
+                          height: 100,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            RawMaterialButton(
+                              onPressed: () {
+                                setState(() {
+                                  quote = fetchQuote();
+                                });
+                              },
+                              elevation: 2.0,
+                              padding: const EdgeInsets.all(15.0),
+                              child: const Icon(
+                                Icons.replay_outlined,
+                                size: 35.0,
+                              ),
+                            ),
+                            const SizedBox(width: 32),
+                            RawMaterialButton(
+                              onPressed: () async {
+                                // Send image with quote?
+                                await Share.share(
+                                  '${snapshot.data!.body}  - ${snapshot.data!.author}',
+                                  subject: 'Look at this stoic quote!',
+                                );
+                              },
+                              padding: const EdgeInsets.all(15.0),
+                              child: const Icon(
+                                Icons.share,
+                                size: 35.0,
+                              ),
+                            )
+                          ],
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 32),
-                  RawMaterialButton(
-                    onPressed: () async {
-                      // Send image with quote?
-                      await Share.share(
-                        snapshot.data!.body,
-                        subject: 'Look at this stoic quote!',
-                      );
-                    },
-                    elevation: 2.0,
-                    fillColor: Colors.white,
-                    padding: const EdgeInsets.all(15.0),
-                    shape: const CircleBorder(),
-                    child: const Icon(
-                      Icons.share,
-                      size: 35.0,
-                    ),
-                  )
-                ],
+                  );
+                },
               );
             } else if (snapshot.hasError) {
               return Text('${snapshot.error}');
