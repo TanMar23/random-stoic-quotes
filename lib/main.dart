@@ -1,13 +1,17 @@
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:random_quotes_app/models/quote_model.dart';
 import 'package:random_quotes_app/widgets/quote_section.dart';
 import 'package:share_plus/share_plus.dart';
 
-void main() {
+import 'models/bg_img_model.dart';
+import 'models/result_model.dart';
+
+Future<void> main() async {
+  await dotenv.load();
   runApp(const RandomQuotesApp());
 }
 
@@ -38,11 +42,13 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late Future<QuoteModel> quote;
+  late Future<BgImgModel> backgroundImg;
 
   @override
   void initState() {
     super.initState();
     quote = fetchQuote();
+    backgroundImg = fetchBackgroundImg();
   }
 
   @override
@@ -50,8 +56,8 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: FutureBuilder<QuoteModel>(
-          future: fetchQuote(),
+        child: FutureBuilder<ResultModel>(
+          future: _newFuture(),
           builder: (context, snapshot) {
             if (snapshot.connectionState != ConnectionState.done) {
               return const CircularProgressIndicator();
@@ -62,15 +68,21 @@ class _HomePageState extends State<HomePage> {
                   return Container(
                     height: constraints.maxHeight,
                     width: constraints.maxWidth,
-                    color:
-                        Color((math.Random().nextDouble() * 0xFFFFFF).toInt())
-                            .withOpacity(0.10),
+                    decoration: BoxDecoration(
+                        image: DecorationImage(
+                            image: NetworkImage(
+                                snapshot.data!.bgImage.urls.regular),
+                            fit: BoxFit.cover)),
+
+                    // color:
+                    //     Color((math.Random().nextDouble() * 0xFFFFFF).toInt())
+                    //         .withOpacity(0.10),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
                         QuoteSection(
-                          quoteAuthor: snapshot.data!.author,
-                          quoteBody: snapshot.data!.body,
+                          quoteAuthor: snapshot.data!.quote.author,
+                          quoteBody: snapshot.data!.quote.body,
                         ),
                         const SizedBox(
                           height: 100,
@@ -80,6 +92,7 @@ class _HomePageState extends State<HomePage> {
                           children: <Widget>[
                             RawMaterialButton(
                               onPressed: () {
+                                fetchBackgroundImg();
                                 setState(() {
                                   quote = fetchQuote();
                                 });
@@ -96,7 +109,7 @@ class _HomePageState extends State<HomePage> {
                               onPressed: () async {
                                 // Send image with quote?
                                 await Share.share(
-                                  '${snapshot.data!.body}  - ${snapshot.data!.author}',
+                                  '${snapshot.data!.quote.body}  - ${snapshot.data!.quote.author}',
                                   subject: 'Look at this stoic quote!',
                                 );
                               },
@@ -134,4 +147,27 @@ Future<QuoteModel> fetchQuote() async {
   } else {
     throw Exception('Failed to load quote');
   }
+}
+
+Future<BgImgModel> fetchBackgroundImg() async {
+  final String apiKey = dotenv.get('API_KEY', fallback: 'API_KEY not found');
+  final url = Uri.https('api.unsplash.com', 'photos/random', {
+    'query': 'sky',
+    'client_id': apiKey,
+  });
+  final response = await http.get(url);
+
+  if (response.statusCode == 200) {
+    return BgImgModel.fromJson(jsonDecode(response.body));
+  } else {
+    throw Exception('Failed to load background image');
+  }
+}
+
+Future<ResultModel> _newFuture() async {
+  final results = await Future.wait([fetchQuote(), fetchBackgroundImg()]);
+  return ResultModel(
+    quote: results[0] as QuoteModel,
+    bgImage: results[1] as BgImgModel,
+  );
 }

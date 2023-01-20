@@ -25,7 +25,7 @@ class QuoteSection extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 40),
+          const SizedBox(height: 24),
           Text(
             '- ${quoteAuthor.toUpperCase()}',
             style: const TextStyle(
