@@ -22,6 +22,7 @@ class QuoteSection extends StatelessWidget {
               fontSize: 24,
               fontWeight: FontWeight.bold,
               fontFamily: 'LibreBaskerville',
+              color: Colors.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -30,6 +31,8 @@ class QuoteSection extends StatelessWidget {
             '- ${quoteAuthor.toUpperCase()}',
             style: const TextStyle(
               fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
         ],

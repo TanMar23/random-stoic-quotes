@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:random_quotes_app/models/quote_model.dart';
@@ -23,9 +25,7 @@ class RandomQuotesApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Random Quotes App',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: ThemeData(fontFamily: 'LibreBaskerville'),
       home: const HomePage(),
     );
   }
@@ -54,84 +54,99 @@ class _HomePageState extends State<HomePage> {
   @override
   // This method is rerun every time setState is called
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: FutureBuilder<ResultModel>(
-          future: _newFuture(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done) {
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+        body: Center(
+          child: FutureBuilder<ResultModel>(
+            future: _fetchQuoteAndBgImg(),
+            builder: (context, snapshot) {
+              final UrlsModel? urls = snapshot.data?.bgImage.urls;
+
+              if (snapshot.connectionState != ConnectionState.done) {
+                return const CircularProgressIndicator();
+              }
+              if (snapshot.hasData) {
+                return LayoutBuilder(
+                  builder: (BuildContext context, BoxConstraints constraints) {
+                    return Container(
+                      height: constraints.maxHeight,
+                      width: constraints.maxWidth,
+                      decoration: BoxDecoration(
+                        image: (urls != null)
+                            ? DecorationImage(
+                                colorFilter: const ColorFilter.mode(
+                                  Colors.grey,
+                                  BlendMode.modulate,
+                                ),
+                                image: NetworkImage(urls.regular),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
+                      ),
+                      color: (urls == null)
+                          ? Color((math.Random().nextDouble() * 0xFFFFFF)
+                                  .toInt())
+                              .withOpacity(0.10)
+                          : null,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          QuoteSection(
+                            quoteAuthor: snapshot.data?.quote.author ?? '',
+                            quoteBody: snapshot.data?.quote.body ?? '',
+                          ),
+                          const SizedBox(
+                            height: 100,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              RawMaterialButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _fetchQuoteAndBgImg();
+                                  });
+                                },
+                                shape: const CircleBorder(),
+                                padding: const EdgeInsets.all(15.0),
+                                child: const Icon(
+                                  Icons.replay_outlined,
+                                  size: 35.0,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(width: 32),
+                              RawMaterialButton(
+                                onPressed: () async {
+                                  // Send image with quote?
+                                  await Share.share(
+                                    '${snapshot.data?.quote.body}  - ${snapshot.data?.quote.author}',
+                                    subject: 'Look at this stoic quote!',
+                                  );
+                                },
+                                shape: const CircleBorder(),
+                                padding: const EdgeInsets.all(15.0),
+                                child: const Icon(
+                                  Icons.share,
+                                  size: 35.0,
+                                  color: Colors.white,
+                                ),
+                              )
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              } else if (snapshot.hasError) {
+                return Text('${snapshot.error}');
+              }
+
               return const CircularProgressIndicator();
-            }
-            if (snapshot.hasData) {
-              return LayoutBuilder(
-                builder: (BuildContext context, BoxConstraints constraints) {
-                  return Container(
-                    height: constraints.maxHeight,
-                    width: constraints.maxWidth,
-                    decoration: BoxDecoration(
-                        image: DecorationImage(
-                            image: NetworkImage(
-                                snapshot.data!.bgImage.urls.regular),
-                            fit: BoxFit.cover)),
-
-                    // color:
-                    //     Color((math.Random().nextDouble() * 0xFFFFFF).toInt())
-                    //         .withOpacity(0.10),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        QuoteSection(
-                          quoteAuthor: snapshot.data!.quote.author,
-                          quoteBody: snapshot.data!.quote.body,
-                        ),
-                        const SizedBox(
-                          height: 100,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            RawMaterialButton(
-                              onPressed: () {
-                                fetchBackgroundImg();
-                                setState(() {
-                                  quote = fetchQuote();
-                                });
-                              },
-                              elevation: 2.0,
-                              padding: const EdgeInsets.all(15.0),
-                              child: const Icon(
-                                Icons.replay_outlined,
-                                size: 35.0,
-                              ),
-                            ),
-                            const SizedBox(width: 32),
-                            RawMaterialButton(
-                              onPressed: () async {
-                                // Send image with quote?
-                                await Share.share(
-                                  '${snapshot.data!.quote.body}  - ${snapshot.data!.quote.author}',
-                                  subject: 'Look at this stoic quote!',
-                                );
-                              },
-                              padding: const EdgeInsets.all(15.0),
-                              child: const Icon(
-                                Icons.share,
-                                size: 35.0,
-                              ),
-                            )
-                          ],
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              );
-            } else if (snapshot.hasError) {
-              return Text('${snapshot.error}');
-            }
-
-            return const CircularProgressIndicator();
-          },
+            },
+          ),
         ),
       ),
     );
@@ -164,7 +179,7 @@ Future<BgImgModel> fetchBackgroundImg() async {
   }
 }
 
-Future<ResultModel> _newFuture() async {
+Future<ResultModel> _fetchQuoteAndBgImg() async {
   final results = await Future.wait([fetchQuote(), fetchBackgroundImg()]);
   return ResultModel(
     quote: results[0] as QuoteModel,

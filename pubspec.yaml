@@ -86,7 +86,9 @@ flutter:
 fonts:
   - family: LibreBaskerville
     fonts:
-      - asset: assets/fonts/Libre_Baskerville/LibreBaskerville-Regular.ttf
+      - asset: assets/fonts/LibreBaskerville-Regular.ttf
+      - asset: assets/fonts/LibreBaskerville-Bold.ttf
+        weight: 700
    
     # - family: Trajan Pro
     #   fonts:
