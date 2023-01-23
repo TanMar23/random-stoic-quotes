@@ -5,10 +5,12 @@ class QuoteSection extends StatelessWidget {
     Key? key,
     required this.quoteBody,
     required this.quoteAuthor,
+    required this.darkColor,
   }) : super(key: key);
 
   final String quoteBody;
   final String quoteAuthor;
+  final bool darkColor;
 
   @override
   Widget build(BuildContext context) {
@@ -18,21 +20,21 @@ class QuoteSection extends StatelessWidget {
         children: <Widget>[
           Text(
             quoteBody,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               fontFamily: 'LibreBaskerville',
-              color: Colors.white,
+              color: darkColor ? Colors.black : Colors.white,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
           Text(
             '- ${quoteAuthor.toUpperCase()}',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: darkColor ? Colors.black : Colors.white,
             ),
           ),
         ],
